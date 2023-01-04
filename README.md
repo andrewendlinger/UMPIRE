@@ -1,5 +1,7 @@
 # UMPIRE
 
+![Actions tests.yml](https://github.com/DiracKeteering/UMPIRE/actions/workflows/tests.yml/badge.svg)
+
 Implementation of the UMPIRE algorithm from the following paper:
 
 > Simon Robinson, Horst Schödl, Siegfried Trattnig, 2014 July,
