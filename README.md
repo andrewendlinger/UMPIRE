@@ -1,6 +1,6 @@
 # UMPIRE
 
-Implementation of the UMPIRE algorithm from the following paper:
+Implementation of the UMPIRE algorithm from the [following paper](https://onlinelibrary.wiley.com/doi/10.1002/mrm.24897):
 
 > Simon Robinson, Horst Schödl, Siegfried Trattnig, 2014 July,
 > "A method for unwrapping highly wrapped multi-echo phase images at
@@ -10,14 +10,18 @@ Implementation of the UMPIRE algorithm from the following paper:
 ## Installation -- Usage
 
 ```bash
-$ git clone ...
+$ git clone https://github.com/DiracKeteering/UMPIRE.git
+
+$ cd UMPIRE
 
 $ pip install -e .
 ```
 
 ## Installation -- Development
 ```bash
-$ git clone ...
+$ git clone https://github.com/DiracKeteering/UMPIRE.git
+
+$ cd UMPIRE
 
 $ pip install -e ".[dev]"
 ```
