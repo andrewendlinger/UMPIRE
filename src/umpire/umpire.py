@@ -7,8 +7,8 @@ Implementation of the UMPIRE algorithm from the following paper:
     DOI: 10.1002/mrm.24897
 
 Implemented by: Andre Wendlinger
-
-
+"""
+"""
 Note: scipy.ndimage dependency
       In case you don't want the scipy.ndimage dependency and/or don't care about
       smoothing the DPD image, you can apply these three simple steps to get rid
@@ -25,7 +25,7 @@ class UmpireError(Exception):
     pass
 
 
-def __handle_UMPIRE_input_scans(echo_scans, TEs, magnitude_weighted_omega_star):
+def __handle_UMPIRE_input(echo_scans, TEs, magnitude_weighted_omega_star):
     """Ensures echo-image arrays and corresponding TEs are both of valid format.
 
     This function helps to avoid some false input errors. It checks the
@@ -56,8 +56,15 @@ def __handle_UMPIRE_input_scans(echo_scans, TEs, magnitude_weighted_omega_star):
     # check if lenght of echo_scans and TEs match
     if len(echo_scans) != len(TEs):
         raise UmpireError(
-            "Length of arguments 'echo_scans' and 'TEs' must equal. "
-            + f"({len(echo_scans)} != {len(TEs)}."
+            "Length of arguments 'echo_scans' and 'TEs' must be equal. "
+            + f"{len(echo_scans)} != {len(TEs)}"
+        )
+
+    # check if lenght of echo_scans is at least 3
+    if len(echo_scans) < 3:
+        raise UmpireError(
+            "You must provide at least three echo images. Only found "
+            + f"{len(echo_scans)}."
         )
 
     for scan in echo_scans:
@@ -190,9 +197,7 @@ def UMPIRE(
 
     # This will raise an error incase of an invalid input, otherwise returns
     # data type as string {"real" or "complex"}
-    data_type = __handle_UMPIRE_input_scans(
-        echo_scans, TEs, magnitude_weighted_omega_star
-    )
+    data_type = __handle_UMPIRE_input(echo_scans, TEs, magnitude_weighted_omega_star)
 
     # --------------------------------------------------------------------------
     # STEP 0: Extract echo times, small delta T and large delta T

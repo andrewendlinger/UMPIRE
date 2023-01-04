@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import curve_fit
 
+
 def fit_frequency(phase_arrays, TEs, load_bar=False):
 
     for arr in phase_arrays:
