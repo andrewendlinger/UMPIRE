@@ -222,6 +222,7 @@ def UMPIRE(
 
     DELTA_TE = TE2 - TE1
     delta_TE = TE3 - TE2 - DELTA_TE
+    assert abs(delta_TE) > 1e-3, f"Very small delta_TE detected: {delta_TE}"
 
     # --------------------------------------------------------------------------
     # STEP 1: Phase images $\theta_i$ are reconstructed for each echo time
