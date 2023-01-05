@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from umpire.umpire import __handle_UMPIRE_input, UmpireError
+from umpire import __handle_UMPIRE_input, UmpireError
 
 
 def test_handle_UMPIRE_input():
