@@ -9,8 +9,25 @@ def generate_simulated_data_2D(img_dims, TEs, reciever_offset=True):
     The phase images are generated according to the section "Simulated Data 1:
     Linear Gradients in Delta-B0 and Reciever Phase Offset." of the UMPIRE
     paper by Robinson et al.
+
+    Parameters
+    ----------
+    img_dims: array_like of lenght 2
+        Array containing dimensions of a phase image according to
+        x_dim, y_dim = img_dims.
+
+    TEs : array_like (N)
+        Array of the 'echo_scans' N echo times in milliseconds. For each
+        echo time a phase image is generated.
+
+    reciever_offset : bool, optional
+        Wether a static gradient along y, simulating a reciever offset R,
+        is added or not.
+
     """
     assert len(img_dims) == 2, "Only two dimensional images."
+    dim_y, dim_x = img_dims  # image axis are swapped for matplotlib
+
     x = np.linspace(-1, 1, img_dims[1])
     y = np.linspace(0, 1, img_dims[0])
     xx, yy = np.meshgrid(x, y)
@@ -32,6 +49,43 @@ def generate_simulated_data_2D(img_dims, TEs, reciever_offset=True):
         phase_imgs[i] = phase_gen_func(xx, yy, TEs[i])
 
     return phase_imgs
+
+
+def generate_simulated_data_semi3D(img_dims, TEs, reciever_offset=True):
+    """Stack 2D images to a semi-3D dataset of shape [len(TEs), x, y, z].
+
+    We create a 3D dataset by repeating the generated 2D phase images
+    along a new axis. There is no new information encoded along the
+    z-direction, hence only semi-3D.
+
+    Parameters
+    ----------
+    img_dims : array_like of lenght 3
+        Array containing dimensions of a phase image according to
+        x_dim, y_dim, z_dim = img_dims.
+
+
+    TEs : array_like (N)
+        Array of the 'echo_scans' N echo times in milliseconds. For each
+        echo time a phase image is generated.
+
+    reciever_offset : bool, optional
+        Wether a static gradient along y, simulating a reciever offset R,
+        is added or not.
+
+    """
+    assert len(img_dims) == 3, "Only three dimensional images."
+    dim_x, dim_y, dim_z = img_dims
+
+    # generate 2D images
+    phase_imgs_2D = generate_simulated_data_2D((dim_x, dim_y), TEs, reciever_offset)
+
+    # generate 3D images, using the broadcasting functionality from np.resize
+    phase_imgs_3D = np.array(
+        [np.resize(arr, (dim_z, dim_x, dim_y)) for arr in phase_imgs_2D]
+    )
+
+    return phase_imgs_3D
 
 
 def wrap_phase(phase):
@@ -119,8 +173,44 @@ def test_umpire_DPD_filter_func(img_dims, TEs, reciver_offset):
     assert error < 1e-9
 
 
-def test_umpire_3D():
-    pass
+@pytest.mark.parametrize(
+    "img_dims, TEs, reciver_offset",
+    [
+        pytest.param((128, 128, 64), [5, 10, 16], False),
+        pytest.param((128, 128, 64), [5, 10, 16], True),
+        pytest.param((128, 256, 64), [5, 10, 16], True),
+        pytest.param((128, 128, 64), [5, 10, 16, 21, 26], True),
+        pytest.param((128, 128, 64), [5, 11, 16, 21, 26], True),
+        pytest.param((128, 128, 64), [6, 10, 15, 20, 25], True),
+    ],
+)
+def test_umpire_3D(img_dims, TEs, reciver_offset):
+    """"""
+    # generate phase images
+    phase_imgs = generate_simulated_data_semi3D(img_dims, TEs, reciver_offset)
+    phase_imgs_wrapped = wrap_phase(phase_imgs)
+
+    # generate umpire ground-truth images. Keep in mind that the results
+    # from UMPIRE always correspond to phase images without reciever_offset!
+    phase_imgs_groundtruth = generate_simulated_data_semi3D(img_dims, TEs, False)
+
+    # apply umpire algorithm
+    phase_imgs_umpire = UMPIRE(
+        phase_imgs_wrapped,
+        TEs,
+        DPD_filter_func=False,
+        magnitude_weighted_omega_star=False,
+    )
+
+    # Calculate absolute Error
+    # Note: We cut off a 1 pixel border for the error calculation, because the
+    #       pixel border sometimes contains random floating point errors.
+    def total_abs_err(a, b):
+        return np.sum(np.abs(a - b)[..., 1:-1, 1:-1, 1:-1])
+
+    error = total_abs_err(phase_imgs_groundtruth, phase_imgs_umpire)
+
+    assert error < 1e-9 * img_dims[-1]  # error adds up for every z slice
 
 
 def test_umpire_magnitude_weighted_omega_star():
