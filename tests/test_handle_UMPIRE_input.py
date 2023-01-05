@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from umpire import __handle_UMPIRE_input, UmpireError
+from umpire.umpire import __handle_UMPIRE_input, UmpireError
 
 
 def test_handle_UMPIRE_input():
@@ -10,6 +10,7 @@ def test_handle_UMPIRE_input():
         __handle_UMPIRE_input(
             echo_scans=np.zeros((3, 128, 128)),
             TEs=[1, 2, 3, 4],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=False,
         )
 
@@ -18,13 +19,16 @@ def test_handle_UMPIRE_input():
         __handle_UMPIRE_input(
             echo_scans=np.zeros((2, 128, 128)),
             TEs=[1, 2],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=False,
         )
+
     # test: not every scan to be an instance of numpy.ndarray class
     with pytest.raises(UmpireError, match=r"Arrays from arg. 'echo_scans'"):
         __handle_UMPIRE_input(
             echo_scans=[np.zeros((128, 128)), np.zeros((128, 128)), [55, 384]],
             TEs=[1, 2, 3],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=False,
         )
 
@@ -37,6 +41,7 @@ def test_handle_UMPIRE_input():
                 np.zeros((128, 256)),
             ],
             TEs=[1, 2, 3],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=False,
         )
 
@@ -49,6 +54,7 @@ def test_handle_UMPIRE_input():
                 np.zeros((128, 128), dtype="complex"),
             ],
             TEs=[1, 2, 3],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=False,
         )
     # test: not a 2D and 3D numpy array as echo image
@@ -60,6 +66,7 @@ def test_handle_UMPIRE_input():
                 np.zeros((128, 128, 64, 4)),
             ],
             TEs=[1, 2, 3],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=False,
         )
 
@@ -72,27 +79,45 @@ def test_handle_UMPIRE_input():
                 np.zeros((128, 128)),
             ],
             TEs=[1, 2, 3],
+            DPD_filter_func=False,
             magnitude_weighted_omega_star=True,
         )
 
-    out = __handle_UMPIRE_input(
+    # test: DPD_filter_func argument is wrongly assigned.
+    with pytest.raises(UmpireError, match=r"DPD_filter_func"):
+        __handle_UMPIRE_input(
+            echo_scans=[
+                np.zeros((128, 128)),
+                np.zeros((128, 128)),
+                np.zeros((128, 128)),
+            ],
+            TEs=[1, 2, 3],
+            DPD_filter_func=(3, 3),
+            magnitude_weighted_omega_star=True,
+        )
+
+    # test wether we get the correct datatype string as ouput (real)
+    out, _ = __handle_UMPIRE_input(
         echo_scans=[
             np.zeros((128, 128)),
             np.zeros((128, 128)),
             np.zeros((128, 128)),
         ],
         TEs=[1, 2, 3],
+        DPD_filter_func=False,
         magnitude_weighted_omega_star=False,
     )
     assert out == "real"
 
-    out = __handle_UMPIRE_input(
+    # test wether we get the correct datatype string as ouput (complex)
+    out, _ = __handle_UMPIRE_input(
         echo_scans=[
             np.zeros((128, 128), dtype="complex"),
             np.zeros((128, 128), dtype="complex"),
             np.zeros((128, 128), dtype="complex"),
         ],
         TEs=[1, 2, 3],
+        DPD_filter_func=False,
         magnitude_weighted_omega_star=True,
     )
     assert out == "complex"

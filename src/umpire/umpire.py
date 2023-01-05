@@ -25,7 +25,9 @@ class UmpireError(Exception):
     pass
 
 
-def __handle_UMPIRE_input(echo_scans, TEs, magnitude_weighted_omega_star):
+def __handle_UMPIRE_input(
+    echo_scans, TEs, DPD_filter_func, magnitude_weighted_omega_star
+):
     """Ensures echo-image arrays and corresponding TEs are both of valid format.
 
     This function helps to avoid some false input errors. It checks the
@@ -92,20 +94,31 @@ def __handle_UMPIRE_input(echo_scans, TEs, magnitude_weighted_omega_star):
             + f"{scan.ndim} axis (=dimensions) found instead."
         )
 
-    # check if our data is real or complex set 'out' accordingly
+    # check if our data is real or complex set 'out_type' accordingly
     if "complex" in str(scan.dtype):
-        out = "complex"
+        out_type = "complex"
     else:
-        out = "real"
+        out_type = "real"
 
+    # check wether DPD_filter_func argument is correctly assigned.
+    if DPD_filter_func == "default":
+        out_func = default_DPD_filter_func()
+    elif DPD_filter_func in (False, None):
+        out_func = lambda x: x
+    elif callable(DPD_filter_func):
+        out_func = DPD_filter_func
+    else:
+        raise UmpireError(
+            'DPD_filter_func argument must be None, "Default" or a function.'
+        )
     # for magnitude weighted omega star images, the scan arrays must be complex
-    if magnitude_weighted_omega_star and out == "real":
+    if magnitude_weighted_omega_star and out_type == "real":
         raise UmpireError(
             "To set the argument magnitude_weighted_omega_star=True, "
             + "complex-valued arrays must be provided."
         )
 
-    return out
+    return out_type, out_func
 
 
 def default_DPD_filter_func(kernel_size=3):
@@ -120,7 +133,7 @@ def default_DPD_filter_func(kernel_size=3):
 def UMPIRE(
     echo_scans,
     TEs,
-    DPD_filter_func=default_DPD_filter_func,
+    DPD_filter_func="default",
     magnitude_weighted_omega_star=False,
     debug_return_step=False,
 ):
@@ -150,12 +163,13 @@ def UMPIRE(
         Array of the 'echo_scans' N echo times in milliseconds. The echo times
         should to be chosen according to [1].
 
-    DPD_filter_func : function, optional
+    DPD_filter_func : {None, str, function}, optional
         This image filter function should accept arrays of similair size to a
         single echo image from 'echo_scans'. Its purpose is to smooth the DPD
         image (see [1]), usually by convolution with a kernel.
-        The default is a median filter with kernel size = 3, which is imported
-        from the scipy.ndimages module.
+        The default is "default" which returns a scipy.ndimages median filter
+        with kernel size of 3. If None (or False), no filter is applied. In case
+        a custom function is provided, it is blindly applied to the DPD image.
 
     magnitude_weighted_omega_star : bool, optional
         Requires echo_scans to be complex-valued arrays. If true, computes a
@@ -196,8 +210,10 @@ def UMPIRE(
     """
 
     # This will raise an error incase of an invalid input, otherwise returns
-    # data type as string {"real" or "complex"}
-    data_type = __handle_UMPIRE_input(echo_scans, TEs, magnitude_weighted_omega_star)
+    # data type as string {"real" or "complex"} and the filter_func
+    data_type, DPD_filter_func = __handle_UMPIRE_input(
+        echo_scans, TEs, DPD_filter_func, magnitude_weighted_omega_star
+    )
 
     # --------------------------------------------------------------------------
     # STEP 0: Extract echo times, small delta T and large delta T
@@ -244,15 +260,17 @@ def UMPIRE(
     # --------------------------------------------------------------------------
     # STEP 3: Difference Between Phase Difference Images is calculated
     # --------------------------------------------------------------------------
-    DPD = np.angle(np.exp(1j * (thetas[2] - 2 * thetas[1] + thetas[0])))
+    DPD_raw = np.angle(np.exp(1j * (thetas[2] - 2 * thetas[1] + thetas[0])))
 
-    if DPD_filter_func:
-        DPD_smooth = DPD_filter_func(DPD)
+    # The filter func can be: 1. median_filter      (default)
+    #                         2. lambda x: x        (does nothing)
+    #                         3. a custom function  (not supervised)
+    DPD_filtered = DPD_filter_func(DPD_raw)
 
-        if debug_return_step == 3:
-            return DPD, DPD_smooth
+    if debug_return_step == 3:
+        return DPD_raw, DPD_filtered
 
-        DPD = DPD_smooth
+    DPD = DPD_filtered
 
     # --------------------------------------------------------------------------
     #  STEP 4: Convert DPD to $\omega$-image
