@@ -285,8 +285,6 @@ def UMPIRE(
     for i in range(len(thetas_primeprime)):
         thetas_primeprime[i] = thetas_zero[i] - 2 * np.pi * n_primes[i]
 
-    # TODO: is old version with squeeze really necessary??
-    # out = np.array([np.squeeze(arr) for arr in thetas_primeprime])
     out = np.array([arr for arr in thetas_primeprime])
 
     return out
