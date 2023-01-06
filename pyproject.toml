@@ -33,7 +33,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov=umpire"
+addopts = "--cov-report term-missing --cov=umpire"
 testpaths = [
   "tests",
 ]
