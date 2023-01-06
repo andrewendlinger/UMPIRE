@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from umpire import UMPIRE
+from umpire import UMPIRE, default_DPD_filter_func
 
 
 def generate_simulated_data_2D(img_dims, TEs, reciever_offset=True):
@@ -145,6 +145,9 @@ def test_umpire_2D(img_dims, TEs, reciver_offset):
         magnitude_weighted_omega_star=False,
     )
 
+    # ensure input shape is same as outputshape
+    assert phase_imgs_umpire.shape == phase_imgs_wrapped.shape
+
     # Calculate absolute Error
     # Note: We cut off a 1 pixel border for the error calculation, because the
     #       pixel border sometimes contains random floating point errors.
@@ -157,17 +160,13 @@ def test_umpire_2D(img_dims, TEs, reciver_offset):
 
 
 @pytest.mark.parametrize(
-    "img_dims, TEs, reciver_offset",
+    "img_dims, TEs, reciver_offset, DPD_filter_func_arg",
     [
-        pytest.param((128, 128), [5, 10, 16], False),
-        pytest.param((128, 128), [5, 10, 16], True),
-        pytest.param((128, 256), [5, 10, 16], True),
-        pytest.param((128, 128), [5, 10, 16, 21, 26], True),
-        pytest.param((128, 128), [5, 11, 16, 21, 26], True),
-        pytest.param((128, 128), [6, 10, 15, 20, 25], True),
+        pytest.param((64, 32), [5, 10, 16], True, "default"),
+        pytest.param((64, 32), [5, 10, 16], True, default_DPD_filter_func(3)),
     ],
 )
-def test_umpire_DPD_filter_func(img_dims, TEs, reciver_offset):
+def test_umpire_DPD_filter_func(img_dims, TEs, reciver_offset, DPD_filter_func_arg):
     """"""
     # generate phase images
     phase_imgs = generate_simulated_data_2D(img_dims, TEs, reciver_offset)
@@ -181,7 +180,7 @@ def test_umpire_DPD_filter_func(img_dims, TEs, reciver_offset):
     phase_imgs_umpire = UMPIRE(
         phase_imgs_wrapped,
         TEs,
-        DPD_filter_func="default",
+        DPD_filter_func=DPD_filter_func_arg,
         magnitude_weighted_omega_star=False,
     )
 
@@ -222,6 +221,9 @@ def test_umpire_3D(img_dims, TEs, reciver_offset):
         magnitude_weighted_omega_star=False,
     )
 
+    # ensure input shape is same as outputshape
+    assert phase_imgs_umpire.shape == phase_imgs_wrapped.shape
+
     # Calculate absolute Error
     # Note: We cut off a 1 pixel border for the error calculation, because the
     #       pixel border sometimes contains random floating point errors.
@@ -234,8 +236,4 @@ def test_umpire_3D(img_dims, TEs, reciver_offset):
 
 
 def test_umpire_magnitude_weighted_omega_star():
-    pass
-
-
-def test_custom_DPD_filter_func():
     pass

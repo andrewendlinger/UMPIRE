@@ -170,8 +170,9 @@ def UMPIRE(
               the arrays are must be complex-valued.
 
     TEs : array_like (N)
-        Array of the 'echo_scans' N echo times in milliseconds. The echo times
-        should to be chosen according to [1].
+        Array of the N echo times in milliseconds, corresponding to the given
+        N 'echo_scans'. The echo times should to be chosen according to [1].
+        The small delta_T delay can be placed within the first three echos.
 
     DPD_filter_func : {None, str, function}, optional
         This image filter function should accept arrays of similair size to a
@@ -205,8 +206,11 @@ def UMPIRE(
 
     Notes
     -----
-    1. delta_T between the first two echo images:
-        TODO
+    1. Echo spacing and small delta_T location:
+        As briefly mentioned in [1], the additional small delta_T delay does not
+        have to occure between the second and third image. Especially in low SNR
+        regimes it might be benificial to insert it between the first and second
+        echo image.
 
     2. magnitude weighted omega star calculation:
         TODO
