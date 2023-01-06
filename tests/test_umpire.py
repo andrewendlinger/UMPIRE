@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
-from umpire import UMPIRE, default_DPD_filter_func
+from umpire import UMPIRE
+from umpire._umpire_input_handling import default_DPD_filter_func
 
 
 def generate_simulated_data_2D(img_dims, TEs, reciever_offset=True):
