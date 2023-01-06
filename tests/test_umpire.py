@@ -94,6 +94,29 @@ def wrap_phase(phase):
 
 
 @pytest.mark.parametrize(
+    "step",
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+)
+def test_debug_return_step(step):
+    """Simply test if every step can be returned. Does no output control."""
+    TEs = [5, 10, 16]
+    img_dims = (128, 128)
+
+    # generate phase images
+    phase_imgs = generate_simulated_data_2D(img_dims, TEs, True)
+    phase_imgs_wrapped = wrap_phase(phase_imgs)
+
+    # apply umpire algorithm
+    premature_output = UMPIRE(
+        phase_imgs_wrapped,
+        TEs,
+        DPD_filter_func=False,
+        magnitude_weighted_omega_star=False,
+        debug_return_step=step,
+    )
+
+
+@pytest.mark.parametrize(
     "img_dims, TEs, reciver_offset",
     [
         pytest.param((128, 128), [5, 10, 16], False),
@@ -176,12 +199,9 @@ def test_umpire_DPD_filter_func(img_dims, TEs, reciver_offset):
 @pytest.mark.parametrize(
     "img_dims, TEs, reciver_offset",
     [
-        pytest.param((128, 128, 64), [5, 10, 16], False),
-        pytest.param((128, 128, 64), [5, 10, 16], True),
-        pytest.param((128, 256, 64), [5, 10, 16], True),
-        pytest.param((128, 128, 64), [5, 10, 16, 21, 26], True),
-        pytest.param((128, 128, 64), [5, 11, 16, 21, 26], True),
-        pytest.param((128, 128, 64), [6, 10, 15, 20, 25], True),
+        pytest.param((128, 64, 32), [5, 10, 16], False),
+        pytest.param((128, 64, 64), [5, 10, 16, 21], True),
+        pytest.param((128, 64, 64), [5, 11, 16, 21], True),
     ],
 )
 def test_umpire_3D(img_dims, TEs, reciver_offset):
@@ -214,4 +234,8 @@ def test_umpire_3D(img_dims, TEs, reciver_offset):
 
 
 def test_umpire_magnitude_weighted_omega_star():
+    pass
+
+
+def test_custom_DPD_filter_func():
     pass

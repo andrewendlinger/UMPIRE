@@ -26,7 +26,7 @@ class UmpireError(Exception):
 
 
 def __handle_UMPIRE_input(
-    echo_scans, TEs, DPD_filter_func, magnitude_weighted_omega_star
+    echo_scans, TEs, DPD_filter_func, magnitude_weighted_omega_star, debug_return_step
 ):
     """Ensures echo-image arrays and corresponding TEs are both of valid format.
 
@@ -111,12 +111,22 @@ def __handle_UMPIRE_input(
         raise UmpireError(
             'DPD_filter_func argument must be None, "Default" or a function.'
         )
+
     # for magnitude weighted omega star images, the scan arrays must be complex
     if magnitude_weighted_omega_star and out_type == "real":
         raise UmpireError(
             "To set the argument magnitude_weighted_omega_star=True, "
             + "complex-valued arrays must be provided."
         )
+
+    # check if debug return step is a valid integer
+    if debug_return_step != None:
+        if not isinstance(debug_return_step, int) or not 0 < debug_return_step < 13:
+            raise UmpireError(
+                "The debug_return_step has to be an integer between 1 and 12."
+                + f"Found {debug_return_step} instead."
+                + " (Note: False == 0, use None instead.)"
+            )
 
     return out_type, out_func
 
@@ -135,7 +145,7 @@ def UMPIRE(
     TEs,
     DPD_filter_func="default",
     magnitude_weighted_omega_star=False,
-    debug_return_step=False,
+    debug_return_step=None,
 ):
     """Performs phase unwrapping of 3+ echo images using the UMPIRE algorithm.
 
@@ -175,8 +185,8 @@ def UMPIRE(
         Requires echo_scans to be complex-valued arrays. If true, computes a
         magnitude weighted image of omega_star (see [1]). Default is false.
 
-    debug_return_step: int, optional
-        Integer i in the range of 1 ≤ i ≤ 13. This option is for debugging. It
+    debug_return_step: {None, int}, optional
+        Integer i in the range of 1 ≤ i ≤ 12. This option is for debugging. It
         results in a premature return of the processed 'echo_scans' after i
         steps of the UMPIRE algorithm (see [1]). Default is None.
 
@@ -208,15 +218,18 @@ def UMPIRE(
            very high field: UMPIRE", Magnetic Resonance in Medicine, 72(1):80-92
            DOI: 10.1002/mrm.24897
     """
-
-    # This will raise an error incase of an invalid input, otherwise returns
+    # This will raise an error in case of an invalid input, otherwise returns
     # data type as string {"real" or "complex"} and the filter_func
     data_type, DPD_filter_func = __handle_UMPIRE_input(
-        echo_scans, TEs, DPD_filter_func, magnitude_weighted_omega_star
+        echo_scans,
+        TEs,
+        DPD_filter_func,
+        magnitude_weighted_omega_star,
+        debug_return_step,
     )
 
     # --------------------------------------------------------------------------
-    # STEP 0: Extract echo times, small delta T and large delta T
+    # STEP 0: Extract echo times, small delta T and large delta T.
     # --------------------------------------------------------------------------
     TE1, TE2, TE3 = TEs[:3]
 
@@ -226,7 +239,7 @@ def UMPIRE(
 
     # --------------------------------------------------------------------------
     # STEP 1: Phase images $\theta_i$ are reconstructed for each echo time
-    #         $T_{Ei}$
+    #         $T_{Ei}$.
     # --------------------------------------------------------------------------
     thetas = np.zeros_like(echo_scans, dtype="float")
     magnitudes = np.zeros_like(echo_scans, dtype="float")
@@ -245,7 +258,7 @@ def UMPIRE(
         return thetas
 
     # --------------------------------------------------------------------------
-    # STEP 2: Phase Difference Images are calculated
+    # STEP 2: Phase Difference Images are calculated.
     # --------------------------------------------------------------------------
     PDs = np.zeros((len(thetas) - 1, *thetas[0].shape))  # (N-1, ...)
 
@@ -259,7 +272,7 @@ def UMPIRE(
         return PDs
 
     # --------------------------------------------------------------------------
-    # STEP 3: Difference Between Phase Difference Images is calculated
+    # STEP 3: Difference Between Phase Difference Images is calculated.
     # --------------------------------------------------------------------------
     DPD_raw = np.angle(np.exp(1j * (thetas[2] - 2 * thetas[1] + thetas[0])))
 
@@ -274,7 +287,7 @@ def UMPIRE(
     DPD = DPD_filtered
 
     # --------------------------------------------------------------------------
-    #  STEP 4: Convert DPD to $\omega$-image
+    #  STEP 4: Convert DPD to $\omega$-image.
     # --------------------------------------------------------------------------
     omega = DPD / delta_TE
 
@@ -282,7 +295,7 @@ def UMPIRE(
         return omega
 
     # --------------------------------------------------------------------------
-    # STEP 5: Identify wraps in PD image using $\omega$
+    # STEP 5: Identify wraps in PD image using $\omega$.
     # --------------------------------------------------------------------------
     n_PDs = np.zeros_like(PDs)
 
@@ -295,7 +308,7 @@ def UMPIRE(
         return n_PDs
 
     # --------------------------------------------------------------------------
-    # STEP 6: Unwrapping PD images (by pixelwise substraction of $2 \pi\cdot n$)
+    # STEP 6: Unwrapping PD images (by pixelwise substraction of $2\pi\cdot n$).
     # --------------------------------------------------------------------------
     PDs_prime = np.zeros_like(PDs)
 
@@ -307,26 +320,31 @@ def UMPIRE(
 
     # --------------------------------------------------------------------------
     # STEP 7: Obtain higher SNR estimate of $\omega^\ast$ using unwrapped PD
-    #         images
+    #         images.
     # --------------------------------------------------------------------------
-    # TODO: magnitude weighted omega star is untested
+    # pick the very first PDs_prime as basis for omega_star
     omega_star = PDs_prime[0] / DELTA_TE
 
     if magnitude_weighted_omega_star:
+        # take the average magnitude of the two echo images each PD consists of,
+        # and use them as weights for an magnitude-weighted averaged PDs_prime.
         weights = np.array(
             [np.mean(magnitudes[i : i + 2], axis=0) for i in range(len(magnitudes) - 1)]
         )  # mag[i], mag[i+1] = mag[i:i+2]
-        omega_star_w = np.average(PDs_prime, axis=0, weights=weights)
+        omega_star_w = np.average(PDs_prime, axis=0, weights=weights) / DELTA_TE
+
+        if debug_return_step == 7:
+            return omega_star, omega_star_w
 
     if debug_return_step == 7:
-        return omega_star, omega_star_w
+        return omega_star
 
     if magnitude_weighted_omega_star:
         omega_star = omega_star_w
 
     # --------------------------------------------------------------------------
     # STEP 8: Use refined $\omega^\ast$-map to identify wraps in original phase
-    #         images
+    #         images.
     # --------------------------------------------------------------------------
     n_thetas = np.zeros_like(thetas)
     for i in range(len(n_thetas)):
@@ -338,7 +356,7 @@ def UMPIRE(
         return n_thetas
 
     # --------------------------------------------------------------------------
-    #  STEP 9: Remove wraps that occured during TE
+    #  STEP 9: Remove wraps that occured during TE.
     # --------------------------------------------------------------------------
     thetas_prime = np.zeros_like(thetas)
 
@@ -349,7 +367,7 @@ def UMPIRE(
         return thetas_prime
 
     # --------------------------------------------------------------------------
-    # STEP 10: Calculate Reciever Phase Offset R
+    # STEP 10: Calculate Reciever Phase Offset R.
     # --------------------------------------------------------------------------
     R = (TEs[0] * thetas_prime[1] - TEs[1] * thetas_prime[0]) / (TEs[0] - TEs[1])
 
@@ -357,7 +375,7 @@ def UMPIRE(
         return R
 
     # --------------------------------------------------------------------------
-    #  STEP 11: Substract Reciever Offset from each phase image
+    #  STEP 11: Substract Reciever Offset from each phase image.
     # --------------------------------------------------------------------------
     thetas_zero = np.zeros_like(thetas)
 
@@ -369,7 +387,7 @@ def UMPIRE(
 
     # --------------------------------------------------------------------------
     # STEP 12: (See step 8) Re-estimate number of wraps that occured between 0
-    #           and $T_Ei$
+    #           and $T_Ei$.
     # --------------------------------------------------------------------------
     n_primes = np.zeros_like(thetas)
 
@@ -382,8 +400,8 @@ def UMPIRE(
         return n_primes
 
     # --------------------------------------------------------------------------
-    # STEP 13: Finally yield images free of wraps due to both reciever offsetand
-    #          $\Delta B_0$ variations
+    # STEP 13: Finally yield images free of wraps due to both reciever offset
+    #          and $\Delta B_0$ variations.
     # --------------------------------------------------------------------------
     thetas_primeprime = np.zeros_like(thetas)
 
@@ -392,6 +410,6 @@ def UMPIRE(
 
     # TODO: is old version with squeeze really necessary??
     # out = np.array([np.squeeze(arr) for arr in thetas_primeprime])
-    out = np.array([np.squeeze(arr) for arr in thetas_primeprime])
+    out = np.array([arr for arr in thetas_primeprime])
 
     return out
