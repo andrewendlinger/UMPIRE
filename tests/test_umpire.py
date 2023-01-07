@@ -52,6 +52,23 @@ def generate_simulated_data_2D(img_dims, TEs, reciever_offset=True):
     return phase_imgs
 
 
+def generate_wrapped_simulated_data_2D_complex(img_dims, TEs, reciever_offset=True):
+    """Wrap phase from 'generate_simulated_data_2D()' and turn complex.
+
+    Phase data is already wrapped for simplicity. Apart from that it is still
+    equal to 'generate_simulated_data_2D()' output and the Magnitude data is
+    uniformly set to one.
+    Note: See  generate_simulated_data_2D for more information.
+    """
+    phase_imgs = generate_simulated_data_2D(img_dims, TEs, reciever_offset)
+    phase_imgs_wrapped = wrap_phase(phase_imgs)
+    magnitude_imgs = np.ones_like(phase_imgs)
+
+    out = magnitude_imgs * np.exp(1j * phase_imgs_wrapped)
+
+    return out
+
+
 def generate_simulated_data_semi3D(img_dims, TEs, reciever_offset=True):
     """Stack 2D images to a semi-3D dataset of shape [len(TEs), x, y, z].
 
@@ -161,6 +178,50 @@ def test_umpire_2D(img_dims, TEs, reciver_offset):
 
 
 @pytest.mark.parametrize(
+    "img_dims, TEs, reciver_offset",
+    [
+        pytest.param((128, 128), [5, 10, 16], False),
+        pytest.param((128, 128), [5, 10, 16], True),
+        pytest.param((128, 256), [5, 10, 16], True),
+        pytest.param((128, 128), [5, 10, 16, 21, 26], True),
+        pytest.param((128, 128), [5, 11, 16, 21, 26], True),
+        pytest.param((128, 128), [6, 10, 15, 20, 25], True),
+    ],
+)
+def test_umpire_2D_complex(img_dims, TEs, reciver_offset):
+    """"""
+    # generate phase images
+    phase_imgs_wrapped = generate_wrapped_simulated_data_2D_complex(
+        img_dims, TEs, reciver_offset
+    )
+
+    # generate umpire ground-truth images. Keep in mind that the results
+    # from UMPIRE always correspond to phase images without reciever_offset!
+    phase_imgs_groundtruth = generate_simulated_data_2D(img_dims, TEs, False)
+
+    # apply umpire algorithm
+    phase_imgs_umpire = UMPIRE(
+        phase_imgs_wrapped,
+        TEs,
+        DPD_filter_func=False,
+        magnitude_weighted_omega_star=False,
+    )
+
+    # ensure input shape is same as outputshape
+    assert phase_imgs_umpire.shape == phase_imgs_wrapped.shape
+
+    # Calculate absolute Error
+    # Note: We cut off a 1 pixel border for the error calculation, because the
+    #       pixel border sometimes contains random floating point errors.
+    def total_abs_err(a, b):
+        return np.sum(np.abs(a - b)[..., 1:-1, 1:-1])
+
+    error = total_abs_err(phase_imgs_groundtruth, phase_imgs_umpire)
+
+    assert error < 1e-9
+
+
+@pytest.mark.parametrize(
     "img_dims, TEs, reciver_offset, DPD_filter_func_arg",
     [
         pytest.param((64, 32), [5, 10, 16], True, "default"),
@@ -236,5 +297,42 @@ def test_umpire_3D(img_dims, TEs, reciver_offset):
     assert error < 1e-9 * img_dims[-1]  # error adds up for every z slice
 
 
-def test_umpire_magnitude_weighted_omega_star():
-    pass
+@pytest.mark.parametrize(
+    "img_dims, TEs, reciver_offset",
+    [
+        pytest.param((64, 64), [5, 10, 16], True),
+        # pytest.param((64, 64, 32), [5, 10, 16], True),
+        pytest.param((128, 64), [5, 10, 16, 21, 26], True),
+    ],
+)
+def test_umpire_magnitude_weighted_omega_star(img_dims, TEs, reciver_offset):
+    """"""
+    # generate phase images
+    phase_imgs_wrapped = generate_wrapped_simulated_data_2D_complex(
+        img_dims, TEs, reciver_offset
+    )
+
+    # generate umpire ground-truth images. Keep in mind that the results
+    # from UMPIRE always correspond to phase images without reciever_offset!
+    phase_imgs_groundtruth = generate_simulated_data_2D(img_dims, TEs, False)
+
+    # apply umpire algorithm
+    phase_imgs_umpire = UMPIRE(
+        phase_imgs_wrapped,
+        TEs,
+        DPD_filter_func=False,
+        magnitude_weighted_omega_star=True,
+    )
+
+    # ensure input shape is same as outputshape
+    assert phase_imgs_umpire.shape == phase_imgs_wrapped.shape
+
+    # Calculate absolute Error
+    # Note: We cut off a 1 pixel border for the error calculation, because the
+    #       pixel border sometimes contains random floating point errors.
+    def total_abs_err(a, b):
+        return np.sum(np.abs(a - b)[..., 1:-1, 1:-1])
+
+    error = total_abs_err(phase_imgs_groundtruth, phase_imgs_umpire)
+
+    assert error < 1e-9

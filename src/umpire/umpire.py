@@ -204,20 +204,27 @@ def UMPIRE(
 
     if magnitude_weighted_omega_star:
         # take the average magnitude of the two echo images each PD consists of,
-        # and use them as weights for an magnitude-weighted averaged PDs_prime.
+        # and use them as weights for a magnitude-weighted averaged PDs_prime.
         weights = np.array(
             [np.mean(magnitudes[i : i + 2], axis=0) for i in range(len(magnitudes) - 1)]
         )  # mag[i], mag[i+1] = mag[i:i+2]
-        omega_star_w = np.average(PDs_prime, axis=0, weights=weights) / DELTA_TE
 
-        if debug_return_step == 7:
-            return omega_star, omega_star_w
+        omega_star_weighted = np.average(
+            [
+                pdp / dt for pdp, dt in zip(PDs_prime, np.diff(TEs))
+            ],  # every PD has its own delta T
+            axis=0,
+            weights=weights,
+        )
 
     if debug_return_step == 7:
-        return omega_star
+        if magnitude_weighted_omega_star:
+            return omega_star, omega_star_weighted
+        else:
+            return omega_star
 
     if magnitude_weighted_omega_star:
-        omega_star = omega_star_w
+        omega_star = omega_star_weighted
 
     # --------------------------------------------------------------------------
     # STEP 8: Use refined $\omega^\ast$-map to identify wraps in original phase
