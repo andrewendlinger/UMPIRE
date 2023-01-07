@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def plot_colorbar(figure, axis, data, cmap="plasma"):
+def plot_colorbar(figure, axis, data):
     """Appends colorbar to axis and scales it according to data.
 
     Requires the following imports:
@@ -23,17 +23,30 @@ def plot_colorbar(figure, axis, data, cmap="plasma"):
         import matplotlib.cm as cm
         from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+    'cmap' arg. deprecated, use arg. 'mappable' instead:
+        img = ax.imshow(...)
+        plot_colorbar(..., mappable=img)
     """
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="5%", pad=0.05)
 
     norm = plt.Normalize(np.min(data), np.max(data))
     figure.colorbar(
-        cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax, orientation="vertical"
+        cm.ScalarMappable(norm=norm, cmap=axis.get_children()[0].get_cmap()),
+        cax=cax,
+        orientation="vertical",
     )
 
 
-def plot_image_series(arrays, label_list, nrows=1, plot_func=None, **subplot_kwrags):
+def plot_image_series(
+    arrays,
+    label_list,
+    nrows=1,
+    cmap="plasma",
+    plot_func=None,
+    normalize=False,
+    **subplot_kwrags
+):
     """Plots series of images into subplots, optionally into multiple rows"""
 
     def pad_or_truncate(some_list, target_len):
@@ -46,12 +59,20 @@ def plot_image_series(arrays, label_list, nrows=1, plot_func=None, **subplot_kwr
 
     fig, axs = plt.subplots(ncols=ncols, nrows=nrows, **subplot_kwrags)
 
+    if normalize:
+        global_min, global_max = np.min(arrays), np.max(arrays)
+
     for ax, arr, label in zip(axs.flat, arrays, label_list):
         if plot_func:
             plot_func(ax, arr)
+            plot_colorbar(fig, ax, arr)
         else:
-            ax.imshow(arr, cmap="plasma")
-        plot_colorbar(fig, ax, arr)
+            if normalize:
+                ax.imshow(arr, cmap=cmap, vmin=global_min, vmax=global_max)
+                plot_colorbar(fig, ax, [global_min, global_max])
+            else:
+                ax.imshow(arr, cmap=cmap)
+                plot_colorbar(fig, ax, arr)
         ax.axis("off")
         ax.set_title(label)
 
