@@ -1,8 +1,6 @@
 # UMPIRE
 
 ![Actions tests.yml](https://github.com/DiracKeteering/UMPIRE/actions/workflows/tests.yml/badge.svg)
-[![codecov](https://codecov.io/gh/DiracKeteering/UMPIRE/branch/main/graph/badge.svg)](https://codecov.io/gh/DiracKeteering/UMPIRE)
-[![license](https://img.shields.io/github/license/DiracKeteering/UMPIRE.svg)](https://github.com/DiracKeteering/UMPIRE/blob/main/LICENSE.txt)
 
 Implementation of the UMPIRE algorithm from the [following paper](https://onlinelibrary.wiley.com/doi/10.1002/mrm.24897):
 
