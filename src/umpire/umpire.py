@@ -218,7 +218,7 @@ def UMPIRE(
         )
 
     if debug_return_step == 7:
-        if magnitude_weighted_omega_star:
+        if magnitude_weighted_omega_star:  # pragma: no cover
             return omega_star, omega_star_weighted
         else:
             return omega_star
