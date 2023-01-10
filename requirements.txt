@@ -10,3 +10,5 @@ numpy==1.21.6
     #   umpire (setup.py)
 scipy==1.7.3
     # via umpire (setup.py)
+tqdm==4.64.1
+    # via umpire (setup.py)

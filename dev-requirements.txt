@@ -89,6 +89,8 @@ tomli==2.0.1
     #   tox
 tox==4.2.2
     # via umpire (pyproject.toml)
+tqdm==4.64.1
+    # via umpire (pyproject.toml)
 typed-ast==1.5.4
     # via black
 typing-extensions==4.4.0
