@@ -46,7 +46,7 @@ def UMPIRE(
         N 'echo_scans'. The echo times should to be chosen according to [1].
         The small delta_T delay can be placed within the first three echos.
 
-    DPD_filter_func : {None, str, function}, optional
+    DPD_filter_func : {None, "default", function}, optional
         This image filter function should accept arrays of similair size to a
         single echo image from 'echo_scans'. Its purpose is to smooth the DPD
         image (see [1]), usually by convolution with a kernel.

@@ -3,7 +3,7 @@ from tqdm.auto import tqdm
 from scipy.optimize import curve_fit
 
 
-def fit_frequency(
+def phase2frequency(
     phase_arrays, TEs, load_bar=False, keep_dims=True, return_fit_results=True
 ):
 

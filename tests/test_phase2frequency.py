@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from umpire.phase2frequency import fit_frequency
+from umpire.phase2frequency import phase2frequency
 from .test_umpire import generate_simulated_data_2D, generate_simulated_data_semi3D
 
 
@@ -27,7 +27,7 @@ def test_phase2frequency_2D(img_dims, TEs, reciver_offset):
     groundtruth = groundtruth[..., 1:-1, 1:-1]
 
     # fit to generated phase images
-    fmap, fmap_err, _ = fit_frequency(phase_imgs, TEs)
+    fmap, fmap_err, _ = phase2frequency(phase_imgs, TEs)
 
     error_fit = np.sum(np.abs(fmap_err))
     assert error_fit < 1e-10
@@ -65,7 +65,7 @@ def test_phase2frequency_3D(img_dims, TEs, reciver_offset):
     groundtruth = groundtruth[..., 1:-1, 1:-1, 1:-1]
 
     # fit to generated phase images
-    fmap, fmap_err, _ = fit_frequency(phase_imgs, TEs)
+    fmap, fmap_err, _ = phase2frequency(phase_imgs, TEs)
 
     error_fit = np.sum(np.abs(fmap_err))
     assert error_fit < 1e-9
