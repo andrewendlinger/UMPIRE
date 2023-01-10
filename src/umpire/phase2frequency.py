@@ -1,47 +1,35 @@
 import numpy as np
+from tqdm.auto import tqdm
 from scipy.optimize import curve_fit
 
 
-def fit_frequency(phase_arrays, TEs, load_bar=False):
+def fit_frequency(
+    phase_arrays, TEs, load_bar=False, keep_dims=True, return_fit_results=True
+):
 
-    for arr in phase_arrays:
-        dimension = len(arr.shape)
-        if dimension not in (2, 3):
-            raise AttributeError(
-                f"Only 2D and 3D arrays allowed. {dimension} dimension(s) found instead."
-            )
-        if arr.shape != phase_arrays[0].shape:
-            raise AttributeError(
-                f"Array shapes do not match. {arr.shape} != {arr[0].shape}"
-            )
-
-    if dimension == 2:
-        examination_array_tmp = np.stack(phase_arrays, axis=2)
-        examination_array = np.expand_dims(examination_array_tmp, axis=3)
-
-    else:  # dimension == 3
-        examination_array = np.stack(phase_arrays, axis=2)
+    if phase_arrays[0].ndim == 2:
+        phase_arrays = np.expand_dims(phase_arrays, axis=3)
 
     def linear_fit_func(x, m, t):
         return m * x + t
 
-    x_dim, y_dim, TE_dim, slice_dim = examination_array.shape
+    _, x_dim, y_dim, z_dim = phase_arrays.shape
 
-    m_phase = np.zeros(
-        (x_dim, y_dim, slice_dim, 4)
+    fit_results = np.zeros(
+        (x_dim, y_dim, z_dim, 4)
     )  # last dim contains m, m_err, t, t_err
 
-    if load_bar:
-        iter_var = tqdm(range(slice_dim))
-    else:
-        iter_var = range(slice_dim)
+    x_range, y_range, z_range = range(x_dim), range(y_dim), range(z_dim)
 
-    for i in iter_var:
-        for x in range(x_dim):
-            for y in range(y_dim):
-                popt, pcov = curve_fit(
-                    linear_fit_func, TEs, examination_array[x, y, :, i]
-                )
+    if load_bar:  # pragma: no cover
+        x_range = tqdm(x_range, position=0, desc="x-dim", leave=False)
+        y_range = tqdm(y_range, position=1, desc="y-dim", leave=False)
+        z_range = tqdm(z_range, position=2, desc="z-dim", leave=False)
+
+    for x in x_range:
+        for y in y_range:
+            for z in z_range:
+                popt, pcov = curve_fit(linear_fit_func, TEs, phase_arrays[:, x, y, z])
 
                 m = popt[0]
                 m_err = np.sqrt(np.diag(pcov))[0]
@@ -49,14 +37,18 @@ def fit_frequency(phase_arrays, TEs, load_bar=False):
                 t = popt[1]
                 t_err = np.sqrt(np.diag(pcov))[1]
 
-                m_phase[x, y, i] = m, m_err, t, t_err
+                fit_results[x, y, z] = m, m_err, t, t_err
 
-    # in case of 2D: remove slice dimension again
-    m_phase = np.squeeze(m_phase)
+    if keep_dims:
+        # in case of 2D: remove slice dimension again
+        fit_results = np.squeeze(fit_results)
 
-    slope_frequency_map = m_phase[..., 0] * 1e3 / (2 * np.pi)
-    slope_frequency_map_err = m_phase[..., 1] * 1e3 / (2 * np.pi)
+    frequency_map_Hz = fit_results[..., 0] * 1e3 / (2 * np.pi)
+    frequency_map_Hz_err = fit_results[..., 1] * 1e3 / (2 * np.pi)
 
-    out = [slope_frequency_map, slope_frequency_map_err, m_phase]
+    out = [frequency_map_Hz, frequency_map_Hz_err]
+
+    if return_fit_results:
+        out.append(fit_results)
 
     return out
