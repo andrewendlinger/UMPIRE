@@ -62,6 +62,9 @@ def UMPIRE(
         Integer i in the range of 1 ≤ i ≤ 12. This option is for debugging. It
         results in a premature return of the processed 'echo_scans' after i
         steps of the UMPIRE algorithm (see [1]). Default is None.
+        Important return steps might be:
+            3 : DPD image (unfiltered and filtered in case of filter)
+            9 : Unwrapped phase image before reciever offset calculations
 
     Returns
     -------

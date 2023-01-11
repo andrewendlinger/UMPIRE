@@ -22,7 +22,7 @@ def phase2frequency(
     x_range, y_range, z_range = range(x_dim), range(y_dim), range(z_dim)
 
     if load_bar:  # pragma: no cover
-        x_range = tqdm(x_range, position=0, desc="x-dim", leave=False)
+        x_range = tqdm(x_range, position=0, desc="x-dim", leave=True)
         y_range = tqdm(y_range, position=1, desc="y-dim", leave=False)
         z_range = tqdm(z_range, position=2, desc="z-dim", leave=False)
 
