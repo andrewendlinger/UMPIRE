@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-def plot_colorbar(figure, axis, data):
+def plot_colorbar(figure, axis, data, **kwargs):
     """Appends colorbar to axis and scales it according to data.
 
     Requires the following imports:
@@ -35,6 +35,7 @@ def plot_colorbar(figure, axis, data):
         cm.ScalarMappable(norm=norm, cmap=axis.get_children()[0].get_cmap()),
         cax=cax,
         orientation="vertical",
+        **kwargs
     )
 
 
