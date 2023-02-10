@@ -27,7 +27,7 @@ def test_phase2frequency_2D(img_dims, TEs, reciver_offset):
     groundtruth = groundtruth[..., 1:-1, 1:-1]
 
     # fit to generated phase images
-    fmap, fmap_err, _ = phase2frequency(phase_imgs, TEs)
+    fmap, fmap_err, _ = phase2frequency(phase_imgs, TEs, return_fit_results=True)
 
     error_fit = np.sum(np.abs(fmap_err))
     assert error_fit < 1e-10
@@ -65,7 +65,7 @@ def test_phase2frequency_3D(img_dims, TEs, reciver_offset):
     groundtruth = groundtruth[..., 1:-1, 1:-1, 1:-1]
 
     # fit to generated phase images
-    fmap, fmap_err, _ = phase2frequency(phase_imgs, TEs)
+    fmap, fmap_err, _ = phase2frequency(phase_imgs, TEs, return_fit_results=True)
 
     error_fit = np.sum(np.abs(fmap_err))
     assert error_fit < 1e-9
