@@ -10,7 +10,7 @@ Implementation of the UMPIRE algorithm from the [following paper](https://online
 > DOI: 10.1002/mrm.24897
 
 ## How to use UMPIRE  
-Check out the jupyter notebooks inside the [notebooks folder](https://github.com/DiracKeteering/UMPIRE/tree/main/notebooks) for some help on how to use this module!
+Check out the jupyter notebooks inside the [notebooks folder](./notebooks) for some help on how to use this module!
 
 ## Installation
 Depending on wether you want to only use or also contribute to the package, choose the appropriate installation.
