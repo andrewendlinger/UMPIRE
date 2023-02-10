@@ -99,7 +99,7 @@ def test_handle_UMPIRE_input():
                 np.zeros((128, 128)),
             ],
             TEs=[1, 2, 3],
-            DPD_filter_func=(3, 3),
+            DPD_filter_func=np.array(1),
             magnitude_weighted_omega_star=False,
             debug_return_step=None,
         )

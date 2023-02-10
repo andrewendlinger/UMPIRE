@@ -225,6 +225,7 @@ def test_umpire_2D_complex(img_dims, TEs, reciver_offset):
     "img_dims, TEs, reciver_offset, DPD_filter_func_arg",
     [
         pytest.param((64, 32), [5, 10, 16], True, "default"),
+        pytest.param((64, 32), [5, 10, 16], True, (3, 3)),
         pytest.param((64, 32), [5, 10, 16], True, default_DPD_filter_func(3)),
     ],
 )
