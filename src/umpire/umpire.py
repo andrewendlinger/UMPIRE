@@ -46,13 +46,26 @@ def UMPIRE(
         N 'echo_scans'. The echo times should to be chosen according to [1].
         The small delta_T delay can be placed within the first three echos.
 
-    DPD_filter_func : {None, "default", function}, optional
-        This image filter function should accept arrays of similair size to a
-        single echo image from 'echo_scans'. Its purpose is to smooth the DPD
-        image (see [1]), usually by convolution with a kernel.
-        The default is "default" which returns a scipy.ndimages median filter
-        with kernel size of 3. If None (or False), no filter is applied. In case
-        a custom function is provided, it is blindly applied to the DPD image.
+    DPD_filter_func : {None, "default", tuple, function}, optional
+        This argument allows for an optional image filtering. Its purpose is to
+        smooth the DPD image (see [1]), usually by convolution with a kernel.
+        The options are:
+
+        - "default":
+            The default, which returns a scipy.ndimages.median_filter with
+            kernel size of 3.
+
+        - None (or False):
+            No filter is applied.
+
+        - tuple:
+            Specifyies a kernel size for the default scipy.ndimages.median_filter
+            function.
+
+        - custom function:
+            If a custom function is provided, it is blindly applied to the DPD
+            image. The image filter function should accept arrays of similair
+            size to a single echo image from 'echo_scans'.
 
     magnitude_weighted_omega_star : bool, optional
         Requires echo_scans to be complex-valued arrays. If true, computes a

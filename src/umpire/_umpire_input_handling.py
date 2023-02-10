@@ -112,9 +112,11 @@ def __handle_UMPIRE_input(
         out_func = lambda x: x
     elif callable(DPD_filter_func):
         out_func = DPD_filter_func
+    elif isinstance(DPD_filter_func, tuple):
+        out_func = default_DPD_filter_func(kernel_size=DPD_filter_func)
     else:
         raise UmpireError(
-            'DPD_filter_func argument must be None, "Default" or a function.'
+            'DPD_filter_func argument must be None, "Default", a tuple or a function.'
         )
 
     # for magnitude weighted omega star images, the scan arrays must be complex
