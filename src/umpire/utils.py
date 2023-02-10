@@ -16,7 +16,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def plot_colorbar(figure, axis, data, **kwargs):
-    """Appends colorbar to axis and scales it according to data.
+    """Appends colorbar to axis and scales it according to min and max of data.
 
     Requires the following imports:
 
@@ -27,10 +27,14 @@ def plot_colorbar(figure, axis, data, **kwargs):
         img = ax.imshow(...)
         plot_colorbar(..., mappable=img)
     """
+    # sort out arrangement of colorbar and plot
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="5%", pad=0.05)
 
+    # normalize internal data form 0 to 1
     norm = plt.Normalize(np.min(data), np.max(data))
+
+    # plot the colorbar, get corresponding cmap from axis
     figure.colorbar(
         cm.ScalarMappable(norm=norm, cmap=axis.get_children()[0].get_cmap()),
         cax=cax,
