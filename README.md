@@ -9,7 +9,13 @@ Implementation of the UMPIRE algorithm from the [following paper](https://online
 > very high field: UMPIRE", Magnetic Resonance in Medicine, 72(1):80-92
 > DOI: 10.1002/mrm.24897
 
-## Installation -- Usage
+## How to use UMPIRE  
+Check out the jupyter notebooks inside the [notebooks folder](https://github.com/DiracKeteering/UMPIRE/tree/main/notebooks) for some help on how to use this module!
+
+## Installation
+Depending on wether you want to only use or also contribute to the package, choose the appropriate installation.
+
+#### Usage
 
 ```bash
 $ git clone https://github.com/DiracKeteering/UMPIRE.git
@@ -19,7 +25,7 @@ $ cd UMPIRE
 $ pip install -e .
 ```
 
-## Installation -- Development
+#### Development
 ```bash
 $ git clone https://github.com/DiracKeteering/UMPIRE.git
 
