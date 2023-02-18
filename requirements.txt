@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements.txt --resolver=backtracking
 #
+joblib==1.2.0
+    # via umpire (setup.py)
 numpy==1.21.6
     # via
     #   scipy

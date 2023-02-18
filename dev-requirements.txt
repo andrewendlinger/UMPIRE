@@ -41,6 +41,8 @@ importlib-metadata==6.0.0
     #   virtualenv
 iniconfig==1.1.1
     # via pytest
+joblib==1.2.0
+    # via umpire (pyproject.toml)
 mypy-extensions==0.4.3
     # via black
 numpy==1.21.6
