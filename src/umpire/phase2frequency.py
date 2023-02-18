@@ -59,7 +59,7 @@ def phase2frequency(
     if phase_arrays[0].ndim == 2:
         phase_arrays = np.expand_dims(phase_arrays, axis=3)
 
-    def linear_fit_func(x, m, t):
+    def linear_fit_func(x, m, t):  # pragma: no cover
         return m * x + t
 
     _, x_dim, y_dim, z_dim = phase_arrays.shape
@@ -70,7 +70,7 @@ def phase2frequency(
     if load_bar:  # pragma: no cover
         index_list = tqdm(index_list, desc="Pixel-wise fitting", leave=True)
 
-    def fit_to_voxel(idx):
+    def fit_to_voxel(idx):  # pragma: no cover
         """Does a linear fit of a single voxel over time, that is, all TEs."""
         popt, pcov = curve_fit(linear_fit_func, TEs, phase_arrays[(..., *idx)])
 
