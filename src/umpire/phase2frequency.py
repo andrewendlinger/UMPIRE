@@ -1,10 +1,11 @@
 import numpy as np
 from tqdm.auto import tqdm
 from scipy.optimize import curve_fit
+from joblib import Parallel, delayed
 
 
 def phase2frequency(
-    phase_arrays, TEs, load_bar=False, keep_dims=True, return_fit_results=False
+    phase_arrays, TEs, load_bar=False, keep_dims=True, return_fit_results=False, njobs=4
 ):
     """Fit frequency map into array of phase images.
 
@@ -36,6 +37,13 @@ def phase2frequency(
         When True, returns all fit parameters m, m_err, t, t_err as direct fit-
         results from fitting to the equation f(x) = m * x + t. Default is False.
 
+    njobs : int, optional
+        The number of CPUs used to calculate the fmap. The pixel-wise fit
+        process (which is based on scipy.optimize.curve_fit) is distributed to
+        N=njobs CPUs using the joblib library.
+        Use njobs=1 for a sequential execution and njobs=-1 to use all CPUs
+        available.
+
     Returns
     ----------
     out : list (2 or 3 elements)
@@ -56,30 +64,29 @@ def phase2frequency(
 
     _, x_dim, y_dim, z_dim = phase_arrays.shape
 
-    fit_results = np.zeros(
-        (x_dim, y_dim, z_dim, 4)
-    )  # last dim contains m, m_err, t, t_err
-
-    x_range, y_range, z_range = range(x_dim), range(y_dim), range(z_dim)
+    # generate a list of all voxel indices
+    index_list = list(np.ndindex((x_dim, y_dim, z_dim)))
 
     if load_bar:  # pragma: no cover
-        x_range = tqdm(x_range, position=0, desc="Pixel-wise fitting", leave=True)
-        # nested for loops are not displayed correctly
-        # y_range = tqdm(y_range, position=1, desc="y-dim", leave=True)
-        # z_range = tqdm(z_range, position=2, desc="z-dim", leave=True)
+        index_list = tqdm(index_list, desc="Pixel-wise fitting", leave=True)
 
-    for x in x_range:
-        for y in y_range:
-            for z in z_range:
-                popt, pcov = curve_fit(linear_fit_func, TEs, phase_arrays[:, x, y, z])
+    def fit_to_voxel(idx):
+        """Does a linear fit of a single voxel over time, that is, all TEs."""
+        popt, pcov = curve_fit(linear_fit_func, TEs, phase_arrays[(..., *idx)])
 
-                m = popt[0]
-                m_err = np.sqrt(np.diag(pcov))[0]
+        m = popt[0]
+        m_err = np.sqrt(np.diag(pcov))[0]
 
-                t = popt[1]
-                t_err = np.sqrt(np.diag(pcov))[1]
+        t = popt[1]
+        t_err = np.sqrt(np.diag(pcov))[1]
 
-                fit_results[x, y, z] = m, m_err, t, t_err
+        return m, m_err, t, t_err
+
+    serial_results = Parallel(n_jobs=njobs)(
+        delayed(fit_to_voxel)(i) for i in index_list
+    )
+
+    fit_results = np.array(serial_results).reshape(x_dim, y_dim, z_dim, 4)
 
     if keep_dims:
         # in case of 2D: remove slice dimension again
