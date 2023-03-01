@@ -24,7 +24,7 @@ def phase2frequency(
 
     TEs : np.ndarray
         One dimensional array containing the echo times corresponding to the
-        phase images.
+        phase images. The time is specified in milliseconds.
 
     load_bar : bool, optional
         Wether or not a progress bar should be displayed. Default is False.
@@ -92,7 +92,7 @@ def phase2frequency(
         # in case of 2D: remove slice dimension again
         fit_results = np.squeeze(fit_results)
 
-    frequency_map_Hz = fit_results[..., 0] * 1e3 / (2 * np.pi)
+    frequency_map_Hz = fit_results[..., 0] * 1e3 / (2 * np.pi)  # ms rad -> Hz
     frequency_map_Hz_err = fit_results[..., 1] * 1e3 / (2 * np.pi)
 
     out = [frequency_map_Hz, frequency_map_Hz_err]
