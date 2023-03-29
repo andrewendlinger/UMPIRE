@@ -18,6 +18,7 @@ def UMPIRE(
     DPD_filter_func="default",
     magnitude_weighted_omega_star=False,
     debug_return_step=None,
+    axis_TE=0,
 ):
     """Performs phase unwrapping of 3+ echo images using the UMPIRE algorithm.
 
@@ -36,8 +37,10 @@ def UMPIRE(
     Parameters
     ----------
     echo_scans : array_like (N, ...), complex or real
-        Input array of N echo images, with N ≥ 3. The images can be two or three
-        dimensional and their dtype can be real, i.e. phase images, or complex.
+        Input array of N echo images, with N ≥ 3. N is assumed to be at axis 0,
+        if that is not the case, specify the axis using the 'axis_TE' keyword.
+        The images can be two or three dimensional and their dtype can be real,
+        i.e. phase images, or complex.
         Note: In case the optional argument magnitude_weighted_omega_star=True
               the arrays are must be complex-valued.
 
@@ -79,6 +82,9 @@ def UMPIRE(
             3 : DPD image (unfiltered and filtered in case of filter)
             9 : Unwrapped phase image before reciever offset calculations
 
+    axis_TE: int, optional
+        Default is zero. Used to specify the axis/dimension of N echo images.
+
     Returns
     -------
     out : ndarray (N, ...)
@@ -110,6 +116,13 @@ def UMPIRE(
            very high field: UMPIRE", Magnetic Resonance in Medicine, 72(1):80-92
            DOI: 10.1002/mrm.24897
     """
+    # ensure echo_scans is numpy array
+    echo_scans = np.array(echo_scans)
+
+    if axis_TE:
+        # bring echo dimension of scan array to first axis
+        echo_scans = np.moveaxis(echo_scans, source=axis_TE, destination=0)
+
     # This will raise an error in case of any invalid input,
     # otherwise returns 'echo_scan' data type as string {"real" or "complex"}
     # and the filter_func for the DPD image.
@@ -119,6 +132,7 @@ def UMPIRE(
         DPD_filter_func,
         magnitude_weighted_omega_star,
         debug_return_step,
+        # axis_TE, TODO! + add tests: does axis_TE match echo_scans dimension (test at the end)
     )
 
     # --------------------------------------------------------------------------
