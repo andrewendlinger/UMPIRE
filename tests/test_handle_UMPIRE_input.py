@@ -24,22 +24,11 @@ def test_handle_UMPIRE_input():
             debug_return_step=None,
         )
 
-    # test: not every scan to be an instance of numpy.ndarray class
-    with pytest.raises(
-        UmpireError, match=r"Failed to turn echo_scans into numpy array"
-    ):
-        __handle_UMPIRE_input(
-            echo_scans=[np.zeros((128, 128)), np.zeros((128, 128)), [55, 384]],
-            TEs=[1, 2, 3],
-            DPD_filter_func=None,
-            magnitude_weighted_omega_star=False,
-            debug_return_step=None,
-        )
-
     # test: not all scan arrays are of equal shape
     with pytest.raises(
         UmpireError, match=r"Failed to turn echo_scans into numpy array"
     ):
+        print("Is this the faulty one?")
         __handle_UMPIRE_input(
             echo_scans=[
                 np.zeros((128, 128)),

@@ -1,4 +1,5 @@
-
 [run]
-omit =
-    src/umpire/utils.py
+  omit = **/utils.py
+
+[report]
+  show_missing = True
