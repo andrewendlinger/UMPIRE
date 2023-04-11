@@ -31,7 +31,12 @@ def default_DPD_filter_func(kernel_size=3):
 
 
 def __handle_UMPIRE_input(
-    echo_scans, TEs, DPD_filter_func, magnitude_weighted_omega_star, debug_return_step
+    echo_scans,
+    TEs,
+    DPD_filter_func,
+    magnitude_weighted_omega_star,
+    debug_return_step,
+    axis_TE=0,
 ):
     """Ensures echo-image arrays and corresponding TEs are both of valid format.
 
@@ -40,19 +45,13 @@ def __handle_UMPIRE_input(
 
     Parameters
     ----------
-    echo_scans : array_like (N, ...), complex or real
-        See UMPIRE-function documentation.
-
-    TEs : array_like (N)
-        See UMPIRE-function documentation.
-
-    magnitude_weighted_omega_star : bool
-        See UMPIRE-function documentation.
+    See UMPIRE function inside umpire.py.
 
     Returns
     -------
-    out : str {"real" or "complex"}
+    out : str {"real" or "complex"}, func {DPD filter function}
         Returns string corresponding to data type of given 'echo_scans' arrays.
+        And returns the correct filter function for the DPD image.
 
     Raises
     ------
@@ -60,47 +59,66 @@ def __handle_UMPIRE_input(
         If echo-image arrays from 'echo_scans' are of invalid shape or data type
         or if length of 'TEs' and 'echo_scans' do not match.
     """
-    # check if lenght of echo_scans and TEs match
+    # ensure echo_scans can be turned into numpy array
+    try:
+        echo_scans = np.array(echo_scans)
+    except Exception as e:
+        err_msg, err_type = str(e), e.__class__.__name__
+        raise UmpireError(
+            f"Failed to turn echo_scans into numpy array. Got the following error:"
+            + "\n    {err_type}: {err_msg}\n"
+        )
+
+    # check if we can bring echo dimension to first axis
+    try:
+        echo_scans = np.moveaxis(echo_scans, axis_TE, 0)
+    except np.AxisError:
+        raise UmpireError(
+            f"axis_TE={axis_TE} is out of bounds for array of dimension {echo_scans.ndim}."
+        )
+
+    # check if length of echo_scans and TEs match
     if len(echo_scans) != len(TEs):
         raise UmpireError(
             "Length of arguments 'echo_scans' and 'TEs' must be equal. "
             + f"{len(echo_scans)} != {len(TEs)}"
         )
 
-    # check if lenght of echo_scans is at least 3
+    # check if length of echo_scans is at least 3
     if len(echo_scans) < 3:
         raise UmpireError(
             "You must provide at least three echo images. Only found "
             + f"{len(echo_scans)}."
         )
 
-    for scan in echo_scans:
-        # check for every scan to be an instance of numpy.ndarray class
-        if not isinstance(scan, np.ndarray):
-            raise UmpireError(
-                "Arrays from arg. 'echo_scans' must be of type numpy.ndarray."
-            )
-        # check for all scan arrays to be of equal shape
-        if scan.shape != echo_scans[0].shape:
-            raise UmpireError(
-                "Array shapes inside 'echo_scans' argument do not match. "
-                + f"{scan.shape} != {echo_scans[0].shape}"
-            )
-        # ensure data types of all scan arrays match
-        if scan.dtype != echo_scans[0].dtype:
-            raise UmpireError(
-                "Array data types inside 'echo_scans' argument do not match. "
-                + f"{scan.dtype} != {echo_scans[0].dtype}"
-            )
+    # for scan in echo_scans:
+    #     # check for every scan to be an instance of numpy.ndarray class
+    #     if not isinstance(scan, np.ndarray):
+    #         raise UmpireError(
+    #             "Arrays from arg. 'echo_scans' must be of type numpy.ndarray."
+    #         )
+    #     # check for all scan arrays to be of equal shape
+    #     if scan.shape != echo_scans[0].shape:
+    #         raise UmpireError(
+    #             "Array shapes inside 'echo_scans' argument do not match. "
+    #             + f"{scan.shape} != {echo_scans[0].shape}"
+    #         )
+    #     # ensure data types of all scan arrays match
+    #     if scan.dtype != echo_scans[0].dtype:
+    #         raise UmpireError(
+    #             "Array data types inside 'echo_scans' argument do not match. "
+    #             + f"{scan.dtype} != {echo_scans[0].dtype}"
+    #         )
+
     # we only accept 2D and 3D numpy arrays as echo images
     if echo_scans[0].ndim not in (2, 3):
         raise UmpireError(
             "Only 2D and 3D arrays allowed. "
-            + f"{scan.ndim} axis (=dimensions) found instead."
+            + f"{echo_scans[0].ndim} axis (=dimensions) found instead."
         )
 
     # check if our data is real or complex set 'out_type' accordingly
-    if "complex" in str(scan.dtype):
+    if "complex" in str(echo_scans[0].dtype):
         out_type = "complex"
     else:
         out_type = "real"

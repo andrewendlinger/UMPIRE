@@ -116,13 +116,6 @@ def UMPIRE(
            very high field: UMPIRE", Magnetic Resonance in Medicine, 72(1):80-92
            DOI: 10.1002/mrm.24897
     """
-    # ensure echo_scans is numpy array
-    echo_scans = np.array(echo_scans)
-
-    if axis_TE:
-        # bring echo dimension of scan array to first axis
-        echo_scans = np.moveaxis(echo_scans, source=axis_TE, destination=0)
-
     # This will raise an error in case of any invalid input,
     # otherwise returns 'echo_scan' data type as string {"real" or "complex"}
     # and the filter_func for the DPD image.
@@ -132,7 +125,7 @@ def UMPIRE(
         DPD_filter_func,
         magnitude_weighted_omega_star,
         debug_return_step,
-        # axis_TE, TODO! + add tests: does axis_TE match echo_scans dimension (test at the end)
+        axis_TE,
     )
 
     # --------------------------------------------------------------------------

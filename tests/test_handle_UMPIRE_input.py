@@ -4,7 +4,6 @@ from umpire._umpire_input_handling import __handle_UMPIRE_input, UmpireError
 
 
 def test_handle_UMPIRE_input():
-
     # test: lenght of echo_scans and TEs do not match
     with pytest.raises(UmpireError, match=r"Length of argument"):
         __handle_UMPIRE_input(
@@ -26,7 +25,9 @@ def test_handle_UMPIRE_input():
         )
 
     # test: not every scan to be an instance of numpy.ndarray class
-    with pytest.raises(UmpireError, match=r"Arrays from arg. 'echo_scans'"):
+    with pytest.raises(
+        UmpireError, match=r"Failed to turn echo_scans into numpy array"
+    ):
         __handle_UMPIRE_input(
             echo_scans=[np.zeros((128, 128)), np.zeros((128, 128)), [55, 384]],
             TEs=[1, 2, 3],
@@ -36,7 +37,9 @@ def test_handle_UMPIRE_input():
         )
 
     # test: not all scan arrays are of equal shape
-    with pytest.raises(UmpireError, match=r"Array shapes"):
+    with pytest.raises(
+        UmpireError, match=r"Failed to turn echo_scans into numpy array"
+    ):
         __handle_UMPIRE_input(
             echo_scans=[
                 np.zeros((128, 128)),
@@ -49,19 +52,6 @@ def test_handle_UMPIRE_input():
             debug_return_step=None,
         )
 
-    # test: not all scan arrays are of equal data type
-    with pytest.raises(UmpireError, match=r"Array data types"):
-        __handle_UMPIRE_input(
-            echo_scans=[
-                np.zeros((128, 128)),
-                np.zeros((128, 128)),
-                np.zeros((128, 128), dtype="complex"),
-            ],
-            TEs=[1, 2, 3],
-            DPD_filter_func=None,
-            magnitude_weighted_omega_star=False,
-            debug_return_step=None,
-        )
     # test: not a 2D and 3D numpy array as echo image
     with pytest.raises(UmpireError, match=r"Only 2D and 3D"):
         __handle_UMPIRE_input(
@@ -146,3 +136,18 @@ def test_handle_UMPIRE_input():
         debug_return_step=None,
     )
     assert out == "complex"
+
+    # test: axis_TE wrong
+    with pytest.raises(UmpireError, match=r"axis_TE="):
+        __handle_UMPIRE_input(
+            echo_scans=[
+                np.zeros((128, 128, 64, 4)),
+                np.zeros((128, 128, 64, 4)),
+                np.zeros((128, 128, 64, 4)),
+            ],
+            TEs=[1, 2, 3],
+            DPD_filter_func=None,
+            magnitude_weighted_omega_star=False,
+            debug_return_step=None,
+            axis_TE=5,
+        )
