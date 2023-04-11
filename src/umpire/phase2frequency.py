@@ -5,7 +5,12 @@ from joblib import Parallel, delayed
 
 
 def phase2frequency(
-    phase_arrays, TEs, load_bar=False, keep_dims=True, return_fit_results=False, njobs=-1
+    phase_arrays,
+    TEs,
+    load_bar=False,
+    keep_dims=True,
+    return_fit_results=False,
+    njobs=-1,
 ):
     """Fit frequency map into array of phase images.
 
