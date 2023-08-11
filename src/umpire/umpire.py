@@ -128,6 +128,9 @@ def UMPIRE(
         axis_TE,
     )
 
+    # actually swap dimensions
+    echo_scans = np.moveaxis(echo_scans, axis_TE, 0)
+
     # --------------------------------------------------------------------------
     # STEP 0: Extract echo times, small delta T and large delta T.
     # --------------------------------------------------------------------------
