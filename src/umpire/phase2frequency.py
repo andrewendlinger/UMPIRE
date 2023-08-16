@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm.auto import tqdm
 from scipy.optimize import curve_fit
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, cpu_count
 
 
 def phase2frequency(
@@ -10,7 +10,7 @@ def phase2frequency(
     load_bar=False,
     keep_dims=True,
     return_fit_results=False,
-    njobs=-1,
+    njobs=None,
 ):
     """Fit frequency map into array of phase images.
 
@@ -86,6 +86,10 @@ def phase2frequency(
         t_err = np.sqrt(np.diag(pcov))[1]
 
         return m, m_err, t, t_err
+
+    if njobs is None:
+        # we want real cores, not virtual cores
+        njobs = cpu_count() // 2
 
     serial_results = Parallel(n_jobs=njobs)(
         delayed(fit_to_voxel)(i) for i in index_list
