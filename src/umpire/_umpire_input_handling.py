@@ -65,8 +65,8 @@ def __handle_UMPIRE_input(
     except Exception as e:
         err_msg, err_type = str(e), e.__class__.__name__
         raise UmpireError(
-            f"Failed to turn echo_scans into numpy array. Got the following error:"
-            + "\n    {err_type}: {err_msg}\n"
+            "Failed to turn echo_scans into numpy array. Got the following error:"
+            + f"\n    {err_type}: {err_msg}\n"
         )
 
     # check if we can bring echo dimension to first axis
@@ -111,11 +111,11 @@ def __handle_UMPIRE_input(
     #         )
 
     # we only accept 2D and 3D numpy arrays as echo images
-    if echo_scans[0].ndim not in (2, 3):
-        raise UmpireError(
-            "Only 2D and 3D arrays allowed. "
-            + f"{echo_scans[0].ndim} axis (=dimensions) found instead."
-        )
+    # if echo_scans[0].ndim not in (2, 3):
+    #     raise UmpireError(
+    #         "Only 2D and 3D arrays allowed. "
+    #         + f"{echo_scans[0].ndim} axis (=dimensions) found instead."
+    #     )
 
     # check if our data is real or complex set 'out_type' accordingly
     if "complex" in str(echo_scans[0].dtype):
