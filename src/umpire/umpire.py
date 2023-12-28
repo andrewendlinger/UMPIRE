@@ -30,23 +30,23 @@ def UMPIRE(
     DELTA_TE = TE2 - TE1
     delta_TE = TE3 - TE2 - DELTA_TE
 
-    With the constraint that no phase wraps occcure during the time delta_TE.
+    With the constraint that no phase wraps occur during the time delta_TE.
     The algorithm follows the implementation suggested in paper [1] and is split
     into 13 steps.
 
     Parameters
     ----------
     echo_scans : array_like (N, ...), complex or real
-        Input array of N echo images, with N ≥ 3. N is assumed to be at axis 0,
+        Input array of N echo images, with N ≥ 3. N is assumed to be at axis 0;
         if that is not the case, specify the axis using the 'axis_TE' keyword.
         The images can be two or three dimensional and their dtype can be real,
         i.e. phase images, or complex.
         Note: In case the optional argument magnitude_weighted_omega_star=True
-              the arrays are must be complex-valued.
+              the arrays must be complex-valued.
 
     TEs : array_like (N)
         Array of the N echo times in milliseconds, corresponding to the given
-        N 'echo_scans'. The echo times should to be chosen according to [1].
+        N 'echo_scans'. The echo times should be chosen according to [1].
         The small delta_T delay can be placed within the first three echos.
 
     DPD_filter_func : {None, "default", tuple, function}, optional
@@ -55,23 +55,23 @@ def UMPIRE(
         The options are:
 
         - "default":
-            The default, which returns a scipy.ndimages.median_filter with
-            kernel size of 3.
+            The default. Returns a scipy.ndimages.median_filter with kernel size
+            of 3.
 
         - None (or False):
             No filter is applied.
 
         - tuple:
-            Specifyies a kernel size for the default scipy.ndimages.median_filter
+            Specifies a kernel size for the default scipy.ndimages.median_filter
             function.
 
         - custom function:
             If a custom function is provided, it is blindly applied to the DPD
-            image. The image filter function should accept arrays of similair
+            image. The image filter function should accept arrays of similar
             size to a single echo image from 'echo_scans'.
 
     magnitude_weighted_omega_star : bool, optional
-        Requires echo_scans to be complex-valued arrays. If true, computes a
+        Requires echo_scans to be complex-valued arrays. If true, compute a
         magnitude weighted image of omega_star (see [1]). Default is false.
 
     debug_return_step: {None, int}, optional
@@ -80,7 +80,7 @@ def UMPIRE(
         steps of the UMPIRE algorithm (see [1]). Default is None.
         Important return steps might be:
             3 : DPD image (unfiltered and filtered in case of filter)
-            9 : Unwrapped phase image before reciever offset calculations
+            9 : Unwrapped phase image before receiver offset calculations
 
     axis_TE: int, optional
         Default is zero. Used to specify the axis/dimension of N echo images.
@@ -88,7 +88,7 @@ def UMPIRE(
     Returns
     -------
     out : ndarray (N, ...)
-        An array containing N unwrapped phase images, extracted from the given
+        An array containing N unwrapped phase images extracted from the given
         N echo images using the UMPIRE algorithm (see [1]). The phase images are
         of the same shape as the input arrays from 'echo_scans' and real-valued.
 
@@ -102,12 +102,13 @@ def UMPIRE(
     -----
     1. Echo spacing and small delta_T location:
         As briefly mentioned in [1], the additional small delta_T delay does not
-        have to occure between the second and third image. Especially in low SNR
-        regimes it might be benificial to insert it between the first and second
-        echo image.
+        have to occur between the second and third images. Especially in low SNR
+        regimes, it might be beneficial to insert it between the first and
+        second echo image.
 
     2. magnitude weighted omega star calculation:
-        TODO
+        As suggested in [1], a magnitude-weighted average of the PD images can
+        be used in step 7 of the algorithm.
 
     References
     ----------
@@ -211,7 +212,7 @@ def UMPIRE(
         return n_PDs
 
     # --------------------------------------------------------------------------
-    # STEP 6: Unwrapping PD images (by pixelwise substraction of $2\pi\cdot n$).
+    # STEP 6: Unwrapping PD images (by pixelwise subtraction of $2\pi\cdot n$).
     # --------------------------------------------------------------------------
     PDs_prime = np.zeros_like(PDs)
 
