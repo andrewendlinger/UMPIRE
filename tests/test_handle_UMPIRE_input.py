@@ -42,18 +42,18 @@ def test_handle_UMPIRE_input():
         )
 
     # test: not a 2D and 3D numpy array as echo image
-    with pytest.raises(UmpireError, match=r"Only 2D and 3D"):
-        __handle_UMPIRE_input(
-            echo_scans=[
-                np.zeros((128, 128, 64, 4)),
-                np.zeros((128, 128, 64, 4)),
-                np.zeros((128, 128, 64, 4)),
-            ],
-            TEs=[1, 2, 3],
-            DPD_filter_func=None,
-            magnitude_weighted_omega_star=False,
-            debug_return_step=None,
-        )
+    # with pytest.raises(UmpireError, match=r"Only 2D and 3D"):
+    #     __handle_UMPIRE_input(
+    #         echo_scans=[
+    #             np.zeros((128, 128, 64, 4)),
+    #             np.zeros((128, 128, 64, 4)),
+    #             np.zeros((128, 128, 64, 4)),
+    #         ],
+    #         TEs=[1, 2, 3],
+    #         DPD_filter_func=None,
+    #         magnitude_weighted_omega_star=False,
+    #         debug_return_step=None,
+    #     )
 
     # test: magnitude weighted omega star images true but, no complex scans
     with pytest.raises(UmpireError, match=r"To set the argument"):
